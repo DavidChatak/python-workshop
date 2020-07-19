@@ -6,21 +6,44 @@ Description: >
     on port 80
 Resources:
   flaskSecurityGroup:
-    Type:AWS::
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+            GroupDescription: Enables HTTP for Flask Web Server
+            GroupName: Flask-WS-SG
+            SecurityGroupIngress:
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
   
   myEC2instanceforFlask01:
-    Type: AWS::EC2::Intance
-    Proporties:
+    Type: AWS::EC2::Instance
+    Properties:
       ImageId: 'ami-0bfddfb1ccc3a6993'
       InstanceType: t2.micro
       KeyName: 'AWS_PEMkey'
-      Tag:
-        Key: Name
-        Value: !Sub Web Server of ${AWS::StackName} Stack
+      Tags:
+        - Key: Name
+          Value: !Sub Web Server of ${AWS::StackName} Stack
+      SecurityGroupIds:
+        - !Ref flaskSecurityGroup
       UserData:
         Fn::Base64: |
                     #! /bin/bash
                     yum update -y
                     yum install python3 -y
                     pip3 install flask
-                    
+                    wget -P templates https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/templates/index.html
+                    wget -P templates https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/templates/result.html
+                    wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/app.py
+                    sudo python3 app.py
+Outputs:
+    WebsiteURL:
+        Description: Roman Numerals Converter Application Website URL
+        Value: !Sub
+            - http://${PublicAddress}
+            - PublicAddress: !GetAtt myEC2instanceforFlask01.PublicDnsName
