@@ -33,14 +33,14 @@ Resources:
         - !Ref flaskSecurityGroup
       UserData:
         Fn::Base64: |
-                    #! /bin/bash
+                    #!/bin/bash
                     yum update -y
                     yum install python3 -y
                     pip3 install flask
-                    wget -P templates https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/templates/index.html
-                    wget -P templates https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/templates/result.html
-                    wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/app.py
-                    sudo python3 app.py
+                    sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/project-1/app.py -P /home/ec2-user
+                    sudo wget https://github.com/DavidChatak/python-workshop/blob/master/projects/project-1/templates/index.html -P /home/ec2-user/templates
+                    sudo wget https://github.com/DavidChatak/python-workshop/blob/master/projects/project-1/templates/result.html -P /home/ec2-user/templates
+                    sudo python3 /home/ec2-user/app.py
 Outputs:
     WebsiteURL:
         Description: Roman Numerals Converter Application Website URL

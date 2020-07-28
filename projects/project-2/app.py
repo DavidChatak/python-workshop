@@ -31,4 +31,4 @@ def sonuc_hesapla():
         return render_template('result.html',tip=tip,not_valid=False,developer_name=developer_name,milliseconds=data,result=converter(data2))
 
 if __name__ == '__main__':
-    uygulama.run(host='0.0.0.0/0', port=80)
+    uygulama.run(host='0.0.0.0', port=80)
