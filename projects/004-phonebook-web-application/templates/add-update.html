@@ -67,6 +67,7 @@
   <h1>Project : Phonebook Application</h1>
   <h2>Welcome to {{developer_name}}'s Phonebook Application</h2>
   <h2 class="sectionnote">Enter a name and phone number to {{action_name}}</h2>
+    {% if action_name=="add" %}
 
   <form action="#" method="post">
     <label for="name"><b>Name:</b></label>
@@ -74,13 +75,37 @@
     <label for="number"><b>Phone Number:</b></label>
     <input placeholder="1234567890" name="phonenumber" id="number" required />
     <button type="submit">{{ action_name.title() }}</button>
+    <a href={{url_for("index")}}>index page</a>
+
     {% if not_valid %}
     <p class="warning"><b>{{ message }}</b></p>
     {% endif %}
     {% if show_result %}
       <h2 class="sectionnote"> {{ result }} </h1>
     {% endif %}
+    {% endif %}
+    
+    {% if action_name=="update" %}
+ </form>
+    <form action="#" method="post">
+    <label for="name"><b>Name:</b></label>
+    <input placeholder="Full Name" type="text" name="username" id="name" required>
+    <label for="name"><b>Name*:</b></label>
+    <input placeholder="Full Name" type="text" name="newusername" id="name" required>
+    <label for="number"><b>Phone Number*:</b></label>
+    <input placeholder="1234567890" name="newphonenumber" id="number" required />
+    <button type="submit">{{ action_name.title() }}</button>
+    <a href={{url_for("index")}}>index page</a>
+
+    {% if not_valid2 %}
+    <p class="warning"><b>{{ message2 }}</b></p>
+    {% endif %}
+    {% if show_result2 %}
+      <h2 class="sectionnote"> {{ result2 }} </h1>
+    {% endif %}
   </form>
+    {% endif %}
+
 
   <p class="footnote"><i>This app is developed in Python by <b>{{ developer_name }}</b> and deployed with Flask on AWS Cloud using Clouldformation Service.</i></p>
 </body>

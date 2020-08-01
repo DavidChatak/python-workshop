@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  this templates is designed to create an EC2 instance, RDS , an ASG and an ELB to host 
+  application of phonebook whcih will be dowloaded from GitHUB.
+Parameters:
+Resources:
+  ELBsecGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: ELB sec-grup allow SSH HTTP #required
+      GroupName: ELBSecGroup
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          ToPort : 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: TCP
+          ToPort : 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+  WebServerTemplate:
+    Type: "AWS::EC2::LaunchTemplate"
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-00077e3fed5089981
+        InstanceType: t2.micro
+        KeyName: AWS_PEMkey
+        SecurityGroupIds: 
+          - !GetAtt WEBSERVERsecGroup.GroupId
+        TagSpecifications: 
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub Web Server of ${AWS::StackName} Stack
+        UserData: 
+          Fn::Base64: |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install python3 -y
+            sudo pip3 install flask
+  
+  WEBSERVERsecGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: web server security group allow ssh http #required
+      GroupName: WEBSERVERsecGroup
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          ToPort : 80
+          FromPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: TCP
+          ToPort : 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+  ELBTargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      Name: ELBTargetGroup
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      VpcId: !GetAtt ELBsecGroup.VpcId
+  ELBLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ELBsecGroup
+      Subnets:
+        - subnet-de0c31b7
+        - subnet-b881d5c3
+        - subnet-9fbf26d2
+      Type: application
+  
+  ELBListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions: #required
+        - TargetGroupArn: !Ref ELBTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ELBLoadBalancer #required
+      Port: 80 #required
+      Protocol: HTTP #required
+  WEBserverASG:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      AvailabilityZones:
+        - !GetAZs ""
+      Cooldown: 1
+      DesiredCapacity: 1
+      HealthCheckGracePeriod: Integer
+      HealthCheckType: ELB
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref WebServerTemplate
+        Version: !GetAtt WebServerTemplate.LatestVersionNumber
+      MaxSize: 2 #required
+      MinSize: 1 #required
+      TargetGroupARNs:
+        - !Ref ELBTargetGroup
+  
+  
+  
+    
+  
+Transform:
+  
+Outputs:

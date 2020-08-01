@@ -72,17 +72,20 @@
     <label for="name"><b>Name:</b></label>
     <input placeholder="Keyword" type="text" name="username" id="name">
     <button type="submit">Search</button>
+    <a href={{url_for("add_up",action="add")}}>add new person</a>
+    <a href={{url_for("add_up",action="update")}}>update a person</a>
+    <a href={{url_for("delete")}}>delete person</a>
     {% if show_result %}
         <h1>Result for '{{ name }}' </h1>
-            <ul> 
+            <ol> 
             {% for person in persons %}
             <li>Name: <b>{{ person[0] }} </b>  ---- Phone Number: <b>{{ person[1] }}</b></li>
             {% endfor %}
-            </ul>
+            </ol>
     {% endif %}
+  
   </form>
   <p>{{note}}</p>
   <p class="footnote"><i>This app is developed in Python by <b>{{ developer_name }}</b> and deployed with Flask on AWS Cloud using Clouldformation Service.</i></p>
 </body>
-<a href="{{url_for('add_update')}}" style=color:red>add or update</a>
 </html>
