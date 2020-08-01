@@ -17,12 +17,12 @@ create table persons(id INT AUTO_INCREMENT PRIMARY KEY,
     number decimal(15) not null )
 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 """
-# data = """
-# insert into phone_book.persons(person,number) values("David Chataque", 505050050),("john smith",0090505343434)
-# """
-# cursor.execute(drop_table)
-# cursor.execute(phone_table)
-# cursor.execute(data)
+data = """
+insert into phone_book.persons(person,number) values("David Chataque", 505050050),("john smith",0090505343434)
+"""
+cursor.execute(drop_table)
+cursor.execute(phone_table)
+cursor.execute(data)
 developer_name = "David CHATAQUE"
 
 def find(word):
@@ -130,4 +130,4 @@ def delete_per():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80)
