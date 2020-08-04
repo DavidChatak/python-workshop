@@ -67,7 +67,7 @@ Resources:
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/add-update.html -P /home/ec2-user/templates
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/delete.html -P /home/ec2-user/templates
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/index.html -P /home/ec2-user/templates
-            sudo echo '{"host": "${!GetAtt PhoneBookDB.Endpoint.Address}"","user": "admin","password": "Clarusway_1","db": "phone_book","port": 3306}' > config.json
+            sudo echo '{"host": "${!GetAtt PhoneBookDB.Endpoint.Address}","user": "admin","password": "Clarusway_1","db": "phone_book","port": 3306}' > config.json
             sudo python3  /home/ec2-user/app.py
   WebServersTG:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
