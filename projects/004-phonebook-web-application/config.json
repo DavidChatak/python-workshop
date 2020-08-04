@@ -1,0 +1,8 @@
+{
+    "host": "database-2.cdqj5q1oiaw9.eu-west-3.rds.amazonaws.com",
+    "user": "admin",
+    "password": "Clarusway_1",
+    "db": "phone_book",
+    "port": 3306
+
+}

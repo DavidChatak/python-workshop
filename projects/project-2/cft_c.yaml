@@ -2,7 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: |
   Cloudformation template for milliseconds converter application
   This app runs on application load balancer
-  
 Resources:
   ALBSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"

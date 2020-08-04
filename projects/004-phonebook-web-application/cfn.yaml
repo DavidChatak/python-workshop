@@ -1,38 +1,47 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
-  this templates is designed to create an EC2 instance, RDS , an ASG and an ELB to host 
-  application of phonebook whcih will be dowloaded from GitHUB.
-Parameters:
+  Cloudformation template for phonebook  application
+  This app runs on application load balancer
 Resources:
-  ELBsecGroup:
+  ALBSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: ELB sec-grup allow SSH HTTP #required
-      GroupName: ELBSecGroup
-      SecurityGroupEgress:
-        - IpProtocol: TCP
-          ToPort : 80
+      GroupDescription: Enable HTTP for ALB #required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
           FromPort: 80
+          ToPort: 80
           CidrIp: 0.0.0.0/0
-        - IpProtocol: TCP
-          ToPort : 22
-          FromPort: 22
-          CidrIp: 0.0.0.0/0
-  WEBSERVERsecGroup:
+  WebServersSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: web server security group allow ssh http #required
-      GroupName: WEBSERVERsecGroup
-      SecurityGroupEgress:
-        - IpProtocol: TCP
-          ToPort : 80
+      GroupDescription: Enable HTTP for App only from ALB #required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
           FromPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: TCP
-          ToPort : 22
+          ToPort: 80
+          SourceSecurityGroupId: !GetAtt ALBSecurityGroup.GroupId
+        - IpProtocol: tcp
           FromPort: 22
+          ToPort: 22
           CidrIp: 0.0.0.0/0
-  WebServerTemplate:
+  PhoneBookDB:
+    Type: "AWS::RDS::DBInstance"
+    Properties:
+      AvailabilityZone: eu-west-3a
+      BackupRetentionPeriod: 0
+      CharacterSetName: utf-8
+      DBInstanceClass: t2.micro #required
+      DBInstanceIdentifier: PhoneBookDB
+      DBName: phone_book
+      Engine: mysql
+      EngineVersion: 8.0.20
+      MasterUserPassword: Clarusway_1
+      MasterUsername: admin
+      Port: 3306
+      PubliclyAccessible: true
+  
+  WebServerLT:
     Type: "AWS::EC2::LaunchTemplate"
     Properties:
       LaunchTemplateData:
@@ -40,7 +49,7 @@ Resources:
         InstanceType: t2.micro
         KeyName: AWS_PEMkey
         SecurityGroupIds: 
-          - !GetAtt WEBSERVERsecGroup.GroupId
+          - !GetAtt WebServersSecurityGroup.GroupId
         TagSpecifications: 
           - ResourceType: instance
             Tags:
@@ -54,62 +63,58 @@ Resources:
             sudo pip3 install flask
             sudo pip3 install flask-mysql
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/app.py -P /home/ec2-user
+            sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/config.configDB.py -P /home/ec2-user
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/add-update.html -P /home/ec2-user/templates
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/delete.html -P /home/ec2-user/templates
             sudo wget https://raw.githubusercontent.com/DavidChatak/python-workshop/master/projects/004-phonebook-web-application/templates/index.html -P /home/ec2-user/templates
-            sudo python3 /home/ec2-user/app.py
-  ELBTargetGroup:
+            sudo echo '{"host": "${!GetAtt PhoneBookDB.Endpoint.Address}"","user": "admin","password": "Clarusway_1","db": "phone_book","port": 3306}' > config.json
+            sudo python3  /home/ec2-user/app.py
+  WebServersTG:
     Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
     Properties:
-      Name: ELBTargetGroup
       Port: 80
       Protocol: HTTP
       TargetType: instance
-      VpcId: !GetAtt ELBsecGroup.VpcId
-  ELBLoadBalancer:
+      VpcId: !GetAtt WebServersSecurityGroup.VpcId
+  ApplicationLoadBalancer:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
       IpAddressType: ipv4
       Scheme: internet-facing
       SecurityGroups:
-        - !Ref ELBsecGroup
+        - !GetAtt ALBSecurityGroup.GroupId
       Subnets:
         - subnet-de0c31b7
         - subnet-b881d5c3
         - subnet-9fbf26d2
       Type: application
-  
-  ELBListener:
+  ALBListener:
     Type: "AWS::ElasticLoadBalancingV2::Listener"
     Properties:
       DefaultActions: #required
-        - TargetGroupArn: !Ref ELBTargetGroup
+        - TargetGroupArn: !Ref WebServersTG
           Type: forward
-      LoadBalancerArn: !Ref ELBLoadBalancer #required
+      LoadBalancerArn: !Ref ApplicationLoadBalancer #required
       Port: 80 #required
       Protocol: HTTP #required
-  WEBserverASG:
+  WebServerASG:
     Type: "AWS::AutoScaling::AutoScalingGroup"
     Properties:
       AvailabilityZones:
-        - !GetAZs ""
-      Cooldown: 1
-      DesiredCapacity: 1
-      HealthCheckGracePeriod: Integer
+        !GetAZs ""
+      DesiredCapacity: 2
+      HealthCheckGracePeriod: 90
       HealthCheckType: ELB
-      LaunchTemplate: 
-        LaunchTemplateId: !Ref WebServerTemplate
-        Version: !GetAtt WebServerTemplate.LatestVersionNumber
-      MaxSize: 2 #required
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebServerLT
+        Version: !GetAtt WebServerLT.LatestVersionNumber
+      MaxSize: 3 #required
       MinSize: 1 #required
       TargetGroupARNs:
-        - !Ref ELBTargetGroup
-  
-  
-  
+        - !Ref WebServersTG
 Outputs:
   WebsiteURL:
-    Description: PhoneBook Application Load Balancer URL
+    Description: Phone Book Application Load Balancer URL
     Value: !Sub 
       - http://${ALBaddress}
-      - ALBaddress: !GetAtt ELBLoadBalancer.DNSName
+      - ALBaddress: !GetAtt ApplicationLoadBalancer.DNSName

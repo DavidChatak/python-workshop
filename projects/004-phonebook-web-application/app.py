@@ -1,11 +1,15 @@
 from flask import Flask, request, render_template, redirect,url_for
 from flaskext.mysql import MySQL
+from   configDB import ConfigDB
+config = ConfigDB()
 app=Flask(__name__)
-app.config['MYSQL_DATABASE_HOST'] = 'database-2.cdqj5q1oiaw9.eu-west-3.rds.amazonaws.com'
-app.config['MYSQL_DATABASE_USER'] = 'admin'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Clarusway_1'
-app.config['MYSQL_DATABASE_DB'] = 'phone_book'
-app.config['MYSQL_DATABASE_PORT'] = 3306
+
+app.config['MYSQL_DATABASE_HOST'] =config.host 
+app.config['MYSQL_DATABASE_USER'] = config.user
+app.config['MYSQL_DATABASE_PASSWORD'] = config.password
+app.config['MYSQL_DATABASE_DB'] = config.db
+app.config['MYSQL_DATABASE_PORT'] = config.port
+
 mysql = MySQL()
 mysql.init_app(app)
 connection = mysql.connect()
